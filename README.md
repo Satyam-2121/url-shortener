@@ -321,3 +321,21 @@ docker compose down
 Backend Developer focused on TypeScript, Distributed Systems, PostgreSQL, Redis, Docker, and Scalable Backend Engineering.
 
 GitHub: https://github.com/Satyam-2121
+
+---
+
+## Testing
+
+### Health Check
+
+```bash
+curl http://localhost:3000
+
+---
+
+## Testing
+
+### Health Check
+
+```bash
+curl http://localhost:3000
