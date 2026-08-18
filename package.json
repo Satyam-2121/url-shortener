@@ -8,7 +8,7 @@
   "dependencies": {
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "nanoid": "^5.1.11",
+    "nanoid": "^3.3.18",
     "pg": "^8.21.0",
     "redis": "^6.0.0",
     "validator": "^13.15.35"
