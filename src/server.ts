@@ -22,13 +22,15 @@ app.get("/", async (_req, res) => {
 
 app.post("/shorten", async (req, res) => {
   try {
-    const { url } = req.body;
+    const input = req.body?.url;
 
-    if (!url) {
+    if (typeof input !== "string" || !input.trim()) {
       return res.status(400).json({
         message: "URL is required",
       });
     }
+
+    const url = input.trim();
 
     try {
       const parsedUrl = new URL(url);
