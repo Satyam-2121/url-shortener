@@ -61,9 +61,7 @@ app.post("/shorten", async (req, res) => {
     console.error("SHORTEN ERROR:", error);
 
     return res.status(500).json({
-      message: error instanceof Error
-        ? error.message
-        : "Something went wrong",
+      message: "Something went wrong",
     });
   }
 });
