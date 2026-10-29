@@ -92,7 +92,14 @@ app.get("/:shortCode", async (req, res) => {
       [shortCode]
     );
 
-    const cachedUrl = await redisClient.get(shortCode);
+    let cachedUrl: string | null = null;
+    if (redisClient.isReady) {
+      try {
+        cachedUrl = await redisClient.get(shortCode);
+      } catch (error) {
+        console.error("CACHE READ ERROR:", error);
+      }
+    }
 
     if (cachedUrl) {
       console.log("Cache Hit");
@@ -101,7 +108,13 @@ app.get("/:shortCode", async (req, res) => {
 
     console.log("Cache Miss");
 
-    await redisClient.set(shortCode, originalUrl);
+    if (redisClient.isReady) {
+      try {
+        await redisClient.set(shortCode, originalUrl);
+      } catch (error) {
+        console.error("CACHE WRITE ERROR:", error);
+      }
+    }
 
     return res.redirect(originalUrl);
   } catch (error) {
