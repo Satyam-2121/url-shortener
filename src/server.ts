@@ -4,6 +4,7 @@ import { redisClient, connectRedis } from "./db/redis";
 import { createShortUrl } from "./services/url.service";
 
 const app = express();
+const port = Number(process.env.PORT ?? 3000);
 
 app.use(express.json());
 
@@ -55,7 +56,7 @@ app.post("/shorten", async (req, res) => {
     return res.status(201).json({
       originalUrl: data.original_url,
       shortCode: data.short_code,
-      shortUrl: `http://localhost:3000/${data.short_code}`,
+      shortUrl: `http://localhost:${port}/${data.short_code}`,
     });
   } catch (error) {
     console.error("SHORTEN ERROR:", error);
@@ -158,6 +159,6 @@ app.get("/analytics/:shortCode", async (req, res) => {
 
 connectRedis();
 
-app.listen(3000, () => {
-  console.log("Server running on port 3000");
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
