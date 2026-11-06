@@ -232,12 +232,17 @@ Response:
 
 ```env
 PORT=3000
+PUBLIC_BASE_URL=https://short.example.com
 
 DB_USER=satyamsingh
 DB_HOST=postgres
 DB_NAME=url_shortener
 DB_PORT=5432
 ```
+
+Set `PUBLIC_BASE_URL` to the externally reachable address of the service when
+deploying it. Generated short URLs use this address; without it, they default to
+`http://localhost:<PORT>` for local development. A trailing slash is optional.
 
 ---
 

@@ -5,6 +5,7 @@ import { createShortUrl } from "./services/url.service";
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
+const publicBaseUrl = (process.env.PUBLIC_BASE_URL || `http://localhost:${port}`).replace(/\/+$/, "");
 
 app.use(express.json());
 
@@ -56,7 +57,7 @@ app.post("/shorten", async (req, res) => {
     return res.status(201).json({
       originalUrl: data.original_url,
       shortCode: data.short_code,
-      shortUrl: `http://localhost:${port}/${data.short_code}`,
+      shortUrl: `${publicBaseUrl}/${data.short_code}`,
     });
   } catch (error) {
     console.error("SHORTEN ERROR:", error);
