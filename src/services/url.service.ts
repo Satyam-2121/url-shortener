@@ -2,18 +2,25 @@ import { pool } from "../db/postgres";
 import { nanoid } from "nanoid";
 
 export async function createShortUrl(originalUrl: string) {
-  const shortCode = nanoid(6);
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const shortCode = nanoid(6);
 
-  const result = await pool.query(
-    `
-    INSERT INTO urls (original_url, short_code)
-    VALUES ($1, $2)
-    RETURNING *
-    `,
-    [originalUrl, shortCode]
-  );
+    const result = await pool.query(
+      `
+      INSERT INTO urls (original_url, short_code)
+      VALUES ($1, $2)
+      ON CONFLICT (short_code) DO NOTHING
+      RETURNING *
+      `,
+      [originalUrl, shortCode]
+    );
 
-  return result.rows[0];
+    if (result.rows.length > 0) {
+      return result.rows[0];
+    }
+  }
+
+  throw new Error("Could not generate a unique short code");
 }
 
 export async function getOriginalUrl(shortCode: string) {
