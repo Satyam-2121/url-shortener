@@ -6,15 +6,38 @@ services:
       POSTGRES_DB: url_shortener
       POSTGRES_USER: satyamsingh
       POSTGRES_PASSWORD: password
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U satyamsingh -d url_shortener"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   redis:
     image: redis:8
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   app:
     build: .
     container_name: url-shortener-api
     ports:
       - "3000:3000"
+    environment:
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: satyamsingh
+      DB_NAME: url_shortener
+      DB_PASSWORD: password
+      REDIS_URL: redis://redis:6379
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:3000}
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy

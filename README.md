@@ -235,9 +235,11 @@ PORT=3000
 PUBLIC_BASE_URL=https://short.example.com
 
 DB_USER=satyamsingh
-DB_HOST=postgres
+DB_HOST=localhost
 DB_NAME=url_shortener
 DB_PORT=5432
+DB_PASSWORD=your_password
+REDIS_URL=redis://localhost:6379
 ```
 
 Set `PUBLIC_BASE_URL` to the externally reachable address of the service when
@@ -280,6 +282,16 @@ Build and start all services:
 
 ```bash
 docker compose up --build
+```
+
+Compose supplies the database credentials and service addresses, waits for
+PostgreSQL and Redis to become ready, and creates the `urls` table in a fresh
+database. The bundled credentials are for local development. PostgreSQL only
+runs `db/init.sql` when initializing an empty data directory; for an existing
+database without the table, run:
+
+```bash
+docker compose exec -T postgres psql -U satyamsingh -d url_shortener < db/init.sql
 ```
 
 Stop services:
