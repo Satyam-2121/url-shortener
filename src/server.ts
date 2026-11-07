@@ -48,11 +48,7 @@ app.post("/shorten", async (req, res) => {
       });
     }
 
-    console.log("Creating short URL:", url);
-
     const data = await createShortUrl(url);
-
-    console.log("Created:", data);
 
     return res.status(201).json({
       originalUrl: data.original_url,
