@@ -64,6 +64,23 @@ app.post("/shorten", async (req, res) => {
   }
 });
 
+// Express otherwise handles HEAD using the GET route, counting link previews as visits.
+app.head("/:shortCode", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT original_url FROM urls WHERE short_code = $1",
+      [req.params.shortCode]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).end();
+    }
+    return res.redirect(result.rows[0].original_url);
+  } catch (error) {
+    console.error("REDIRECT ERROR:", error);
+    return res.status(500).end();
+  }
+});
+
 app.get("/:shortCode", async (req, res) => {
   try {
     const { shortCode } = req.params;
