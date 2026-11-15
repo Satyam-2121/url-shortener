@@ -7,9 +7,15 @@ const vm = require('node:vm');
 const ts = require('typescript');
 const express = require('express');
 
-test('HEAD previews redirect without increasing visit counts', async (t) => {
+test('HEAD previews do not count as visits and stale cache entries are refreshed', async (t) => {
   let visits = 0;
   let app;
+  let cachedUrl = 'https://old.example/';
+  const redisClient = {
+    isReady: true,
+    async get() { return cachedUrl; },
+    async set(_code, url) { cachedUrl = url; },
+  };
   const pool = { async query(sql, [code]) {
     if (sql.includes('UPDATE')) { visits++; return { rows: [] }; }
     return { rows: code === 'abc123' ? [{ original_url: 'https://example.com/' }] : [] };
@@ -28,7 +34,7 @@ test('HEAD previews redirect without increasing visit counts', async (t) => {
     require(name) {
       if (name === 'express') return fakeExpress;
       if (name === './db/postgres') return { pool };
-      if (name === './db/redis') return { redisClient: { isReady: false }, connectRedis() {} };
+      if (name === './db/redis') return { redisClient, connectRedis() {} };
       if (name === './services/url.service') return { createShortUrl() {} };
       throw new Error(`Unexpected import: ${name}`);
     },
@@ -46,5 +52,10 @@ test('HEAD previews redirect without increasing visit counts', async (t) => {
   assert.equal(visits, 0);
   const visit = await fetch(`${base}/abc123`, { redirect: 'manual' });
   assert.equal(visit.status, 302);
+  assert.equal(visit.headers.get('location'), 'https://example.com/');
+  assert.equal(cachedUrl, 'https://example.com/');
   assert.equal(visits, 1);
+  const cachedVisit = await fetch(`${base}/abc123`, { redirect: 'manual' });
+  assert.equal(cachedVisit.headers.get('location'), 'https://example.com/');
+  assert.equal(visits, 2);
 });

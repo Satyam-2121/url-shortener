@@ -116,7 +116,8 @@ app.get("/:shortCode", async (req, res) => {
       }
     }
 
-    if (cachedUrl) {
+    // PostgreSQL is authoritative; a stale cache entry may point at an old URL.
+    if (cachedUrl !== null && cachedUrl === originalUrl) {
       console.log("Cache Hit");
       return res.redirect(cachedUrl);
     }
