@@ -10,6 +10,7 @@ const express = require('express');
 test('HEAD previews do not count as visits and stale cache entries are refreshed', async (t) => {
   let visits = 0;
   let app;
+  const queries = [];
   let cachedUrl = 'https://old.example/';
   const redisClient = {
     isReady: true,
@@ -17,8 +18,13 @@ test('HEAD previews do not count as visits and stale cache entries are refreshed
     async set(_code, url) { cachedUrl = url; },
   };
   const pool = { async query(sql, [code]) {
-    if (sql.includes('UPDATE')) { visits++; return { rows: [] }; }
-    return { rows: code === 'abc123' ? [{ original_url: 'https://example.com/' }] : [] };
+    queries.push(sql);
+    if (code !== 'abc123') return { rows: [] };
+    if (sql.includes('UPDATE')) {
+      visits++;
+      if (!sql.includes('RETURNING original_url')) return { rows: [] };
+    }
+    return { rows: [{ original_url: 'https://example.com/' }] };
   } };
   const fakeExpress = Object.assign(() => {
     app = express();
@@ -50,12 +56,17 @@ test('HEAD previews do not count as visits and stale cache entries are refreshed
   const missing = await fetch(`${base}/missing`, { method: 'HEAD', redirect: 'manual' });
   assert.equal(missing.status, 404);
   assert.equal(visits, 0);
+  queries.length = 0;
   const visit = await fetch(`${base}/abc123`, { redirect: 'manual' });
   assert.equal(visit.status, 302);
   assert.equal(visit.headers.get('location'), 'https://example.com/');
   assert.equal(cachedUrl, 'https://example.com/');
   assert.equal(visits, 1);
+  assert.equal(queries.length, 1, 'GET should resolve the destination and count the visit in one query');
   const cachedVisit = await fetch(`${base}/abc123`, { redirect: 'manual' });
   assert.equal(cachedVisit.headers.get('location'), 'https://example.com/');
+  assert.equal(visits, 2);
+  const missingVisit = await fetch(`${base}/missing`, { redirect: 'manual' });
+  assert.equal(missingVisit.status, 404);
   assert.equal(visits, 2);
 });

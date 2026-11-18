@@ -86,9 +86,10 @@ app.get("/:shortCode", async (req, res) => {
     const { shortCode } = req.params;
 
     const result = await pool.query(
-      `SELECT original_url
-       FROM urls
-       WHERE short_code = $1`,
+      `UPDATE urls
+       SET visit_count = visit_count + 1
+       WHERE short_code = $1
+       RETURNING original_url`,
       [shortCode]
     );
 
@@ -99,13 +100,6 @@ app.get("/:shortCode", async (req, res) => {
     }
 
     const originalUrl = result.rows[0].original_url;
-
-    await pool.query(
-      `UPDATE urls
-       SET visit_count = visit_count + 1
-       WHERE short_code = $1`,
-      [shortCode]
-    );
 
     let cachedUrl: string | null = null;
     if (redisClient.isReady) {
