@@ -74,7 +74,7 @@ app.head("/:shortCode", async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).end();
     }
-    return res.redirect(result.rows[0].original_url);
+    return res.redirect(new URL(result.rows[0].original_url).href);
   } catch (error) {
     console.error("REDIRECT ERROR:", error);
     return res.status(500).end();
@@ -113,7 +113,7 @@ app.get("/:shortCode", async (req, res) => {
     // PostgreSQL is authoritative; a stale cache entry may point at an old URL.
     if (cachedUrl !== null && cachedUrl === originalUrl) {
       console.log("Cache Hit");
-      return res.redirect(cachedUrl);
+      return res.redirect(new URL(cachedUrl).href);
     }
 
     console.log("Cache Miss");
@@ -126,7 +126,7 @@ app.get("/:shortCode", async (req, res) => {
       }
     }
 
-    return res.redirect(originalUrl);
+    return res.redirect(new URL(originalUrl).href);
   } catch (error) {
     console.error("REDIRECT ERROR:", error);
 

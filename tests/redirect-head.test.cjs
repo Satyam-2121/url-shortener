@@ -7,7 +7,7 @@ const vm = require('node:vm');
 const ts = require('typescript');
 const express = require('express');
 
-test('HEAD previews do not count as visits and stale cache entries are refreshed', async (t) => {
+test('redirects use absolute destinations and HEAD requests do not count as visits', async (t) => {
   let visits = 0;
   let app;
   const queries = [];
@@ -24,7 +24,7 @@ test('HEAD previews do not count as visits and stale cache entries are refreshed
       visits++;
       if (!sql.includes('RETURNING original_url')) return { rows: [] };
     }
-    return { rows: [{ original_url: 'https://example.com/' }] };
+    return { rows: [{ original_url: 'http:example.com' }] };
   } };
   const fakeExpress = Object.assign(() => {
     app = express();
@@ -51,7 +51,7 @@ test('HEAD previews do not count as visits and stale cache entries are refreshed
   const base = `http://127.0.0.1:${server.address().port}`;
   const preview = await fetch(`${base}/abc123`, { method: 'HEAD', redirect: 'manual' });
   assert.equal(preview.status, 302);
-  assert.equal(preview.headers.get('location'), 'https://example.com/');
+  assert.equal(preview.headers.get('location'), 'http://example.com/');
   assert.equal(visits, 0);
   const missing = await fetch(`${base}/missing`, { method: 'HEAD', redirect: 'manual' });
   assert.equal(missing.status, 404);
@@ -59,12 +59,12 @@ test('HEAD previews do not count as visits and stale cache entries are refreshed
   queries.length = 0;
   const visit = await fetch(`${base}/abc123`, { redirect: 'manual' });
   assert.equal(visit.status, 302);
-  assert.equal(visit.headers.get('location'), 'https://example.com/');
-  assert.equal(cachedUrl, 'https://example.com/');
+  assert.equal(visit.headers.get('location'), 'http://example.com/');
+  assert.equal(cachedUrl, 'http:example.com');
   assert.equal(visits, 1);
   assert.equal(queries.length, 1, 'GET should resolve the destination and count the visit in one query');
   const cachedVisit = await fetch(`${base}/abc123`, { redirect: 'manual' });
-  assert.equal(cachedVisit.headers.get('location'), 'https://example.com/');
+  assert.equal(cachedVisit.headers.get('location'), 'http://example.com/');
   assert.equal(visits, 2);
   const missingVisit = await fetch(`${base}/missing`, { redirect: 'manual' });
   assert.equal(missingVisit.status, 404);
