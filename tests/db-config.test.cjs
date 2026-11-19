@@ -26,7 +26,10 @@ test('PostgreSQL uses the configured database credentials', () => {
     DB_PORT: '5432', DB_NAME: 'url_shortener',
   }, {
     dotenv: { config() {} },
-    pg: { Pool: class { constructor(value) { options = value; } } },
+    pg: { Pool: class {
+      constructor(value) { options = value; }
+      on() {}
+    } },
   });
   assert.deepEqual({ ...options }, {
     user: 'app', password: 'test-password', host: 'postgres',

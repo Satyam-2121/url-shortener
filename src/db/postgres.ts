@@ -10,3 +10,8 @@ export const pool = new Pool({
   password: process.env.DB_PASSWORD,
   port: Number(process.env.DB_PORT),
 });
+
+// An idle connection can fail outside the scope of any request.
+pool.on("error", (error) => {
+  console.error("PostgreSQL idle connection error:", error.message);
+});
