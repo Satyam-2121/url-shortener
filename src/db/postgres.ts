@@ -9,6 +9,7 @@ export const pool = new Pool({
   database: process.env.DB_NAME,
   password: process.env.DB_PASSWORD,
   port: Number(process.env.DB_PORT),
+  connectionTimeoutMillis: 5000,
 });
 
 // An idle connection can fail outside the scope of any request.

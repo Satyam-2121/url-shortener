@@ -33,7 +33,7 @@ test('PostgreSQL uses the configured database credentials', () => {
   });
   assert.deepEqual({ ...options }, {
     user: 'app', password: 'test-password', host: 'postgres',
-    port: 5432, database: 'url_shortener',
+    port: 5432, database: 'url_shortener', connectionTimeoutMillis: 5000,
   });
 });
 
