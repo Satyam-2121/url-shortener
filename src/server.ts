@@ -1,4 +1,4 @@
-import express from "express";
+import express, { type ErrorRequestHandler } from "express";
 import { pool } from "./db/postgres";
 import { redisClient, connectRedis } from "./db/redis";
 import { createShortUrl } from "./services/url.service";
@@ -165,6 +165,18 @@ app.get("/analytics/:shortCode", async (req, res) => {
     });
   }
 });
+
+const handleJsonErrors: ErrorRequestHandler = (error, _req, res, next) => {
+  if (error.type === "entity.parse.failed") {
+    res.status(400).json({ message: "Invalid JSON request body" });
+  } else if (error.type === "entity.too.large") {
+    res.status(413).json({ message: "Request body is too large" });
+  } else {
+    next(error);
+  }
+};
+
+app.use(handleJsonErrors);
 
 connectRedis();
 
