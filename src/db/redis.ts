@@ -12,6 +12,10 @@ redisClient.on("error", (err) => {
 });
 
 export async function connectRedis() {
-  await redisClient.connect();
-  console.log("Redis Connected");
+  try {
+    await redisClient.connect();
+    console.log("Redis Connected");
+  } catch (error) {
+    console.error("Could not connect to Redis. Redirects will use PostgreSQL:", error);
+  }
 }

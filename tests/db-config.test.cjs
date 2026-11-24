@@ -5,18 +5,20 @@ const test = require('node:test');
 const vm = require('node:vm');
 const ts = require('typescript');
 
-function loadConfig(file, env, dependencies) {
+function loadConfig(file, env, dependencies, logger = console) {
   const source = fs.readFileSync(path.join(__dirname, '../src/db', file), 'utf8');
   const { outputText } = ts.transpileModule(source, {
     compilerOptions: { module: ts.ModuleKind.CommonJS, esModuleInterop: true },
   });
+  const exports = {};
   vm.runInNewContext(outputText, {
-    exports: {}, process: { env }, console,
+    exports, process: { env }, console: logger,
     require(name) {
       if (Object.hasOwn(dependencies, name)) return dependencies[name];
       throw new Error(`Unexpected import: ${name}`);
     },
   });
+  return exports;
 }
 
 test('PostgreSQL uses the configured database credentials', () => {
@@ -47,3 +49,18 @@ for (const configuredUrl of [undefined, 'redis://redis:6379']) {
     assert.equal(options.url, configuredUrl || 'redis://localhost:6379');
   });
 }
+
+test('a Redis startup rejection is reported without aborting startup', async () => {
+  const error = new Error('Redis connection refused');
+  const logged = [];
+  const { connectRedis } = loadConfig('redis.ts', {}, {
+    'dotenv/config': {},
+    redis: { createClient() { return {
+      on() {},
+      async connect() { throw error; },
+    }; } },
+  }, { error(_message, cause) { logged.push(cause); } });
+
+  await connectRedis();
+  assert.deepEqual(logged, [error]);
+});
