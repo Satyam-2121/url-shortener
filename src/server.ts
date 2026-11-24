@@ -87,7 +87,7 @@ app.get("/:shortCode", async (req, res) => {
 
     const result = await pool.query(
       `UPDATE urls
-       SET visit_count = visit_count + 1
+       SET visit_count = COALESCE(visit_count, 0) + 1
        WHERE short_code = $1
        RETURNING original_url`,
       [shortCode]
@@ -143,7 +143,7 @@ app.get("/analytics/:shortCode", async (req, res) => {
     const result = await pool.query(
       `SELECT original_url,
               short_code,
-              visit_count,
+              COALESCE(visit_count, 0) AS visit_count,
               created_at
        FROM urls
        WHERE short_code = $1`,
