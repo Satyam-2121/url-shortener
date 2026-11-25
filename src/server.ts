@@ -66,6 +66,7 @@ app.post("/shorten", async (req, res) => {
 
 // Express otherwise handles HEAD using the GET route, counting link previews as visits.
 app.head("/:shortCode", async (req, res) => {
+  res.set("Cache-Control", "no-store");
   try {
     const result = await pool.query(
       "SELECT original_url FROM urls WHERE short_code = $1",
@@ -82,6 +83,7 @@ app.head("/:shortCode", async (req, res) => {
 });
 
 app.get("/:shortCode", async (req, res) => {
+  res.set("Cache-Control", "no-store");
   try {
     const { shortCode } = req.params;
 

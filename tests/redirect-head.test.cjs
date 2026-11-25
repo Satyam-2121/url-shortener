@@ -51,6 +51,7 @@ test('redirects use absolute destinations and HEAD requests do not count as visi
   const base = `http://127.0.0.1:${server.address().port}`;
   const preview = await fetch(`${base}/abc123`, { method: 'HEAD', redirect: 'manual' });
   assert.equal(preview.status, 302);
+  assert.equal(preview.headers.get('cache-control'), 'no-store');
   assert.equal(preview.headers.get('location'), 'http://example.com/');
   assert.equal(visits, 0);
   const missing = await fetch(`${base}/missing`, { method: 'HEAD', redirect: 'manual' });
@@ -59,11 +60,13 @@ test('redirects use absolute destinations and HEAD requests do not count as visi
   queries.length = 0;
   const visit = await fetch(`${base}/abc123`, { redirect: 'manual' });
   assert.equal(visit.status, 302);
+  assert.equal(visit.headers.get('cache-control'), 'no-store');
   assert.equal(visit.headers.get('location'), 'http://example.com/');
   assert.equal(cachedUrl, 'http:example.com');
   assert.equal(visits, 1);
   assert.equal(queries.length, 1, 'GET should resolve the destination and count the visit in one query');
   const cachedVisit = await fetch(`${base}/abc123`, { redirect: 'manual' });
+  assert.equal(cachedVisit.headers.get('cache-control'), 'no-store');
   assert.equal(cachedVisit.headers.get('location'), 'http://example.com/');
   assert.equal(visits, 2);
   const missingVisit = await fetch(`${base}/missing`, { redirect: 'manual' });
