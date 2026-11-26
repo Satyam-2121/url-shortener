@@ -242,9 +242,10 @@ DB_PASSWORD=your_password
 REDIS_URL=redis://localhost:6379
 ```
 
-Set `PUBLIC_BASE_URL` to the externally reachable address of the service when
-deploying it. Generated short URLs use this address; without it, they default to
-`http://localhost:<PORT>` for local development. A trailing slash is optional.
+Set `PUBLIC_BASE_URL` to the externally reachable HTTP or HTTPS address of the
+service. You can include a path prefix and a trailing slash. The address must
+omit credentials, a query, and a fragment. For local development, the default
+is `http://localhost:<PORT>`.
 
 ---
 

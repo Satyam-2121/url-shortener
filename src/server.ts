@@ -5,7 +5,26 @@ import { createShortUrl } from "./services/url.service";
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
-const publicBaseUrl = (process.env.PUBLIC_BASE_URL || `http://localhost:${port}`).replace(/\/+$/, "");
+const configuredBaseUrl = process.env.PUBLIC_BASE_URL;
+const publicBaseUrl = configuredBaseUrl
+  ? normalizePublicBaseUrl(configuredBaseUrl)
+  : `http://localhost:${port}`;
+
+function normalizePublicBaseUrl(value: string): string {
+  const errorMessage = "PUBLIC_BASE_URL must be an HTTP or HTTPS URL without credentials, a query, or a fragment";
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error(errorMessage);
+  }
+
+  if (!["http:", "https:"].includes(url.protocol) || url.username || url.password || /[?#]/.test(url.href)) {
+    throw new Error(errorMessage);
+  }
+
+  return url.href.replace(/\/+$/, "");
+}
 
 app.use(express.json());
 
